@@ -170,17 +170,20 @@ export function DashboardPage() {
                 {/* Coloured top accent strip */}
                 <div className="h-1 w-full bg-gradient-to-r from-primary/60 via-primary to-primary/40" />
 
+                {/* Whole-card link. Sits below everything else (z-0) so the
+                    delete button, version toggle, and version links stay
+                    independently clickable, but tapping anywhere else on
+                    the card opens it. */}
+                <Link to={`/cv/${cv.id}`} className="absolute inset-0 z-0" aria-label={cv.name} />
+
                 {/* Card body */}
-                <div className="flex flex-1 flex-col px-5 pt-4 pb-3">
+                <div className="relative z-10 flex flex-1 flex-col px-5 pt-4 pb-3 pointer-events-none [&_a]:pointer-events-auto [&_button]:pointer-events-auto">
 
                   {/* Title row */}
                   <div className="mb-3 flex items-start justify-between gap-3">
-                    <Link
-                      to={`/cv/${cv.id}`}
-                      className="font-display text-lg leading-snug text-foreground underline-offset-4 hover:underline"
-                    >
+                    <span className="font-display text-lg leading-snug text-foreground">
                       {cv.name}
-                    </Link>
+                    </span>
                     {/* ATS grade pill */}
                     <span className={`mt-0.5 shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${grade.pill}`}>
                       {atsGrade} · {atsScore}
@@ -242,7 +245,7 @@ export function DashboardPage() {
                 </div>
 
                 {/* Card footer */}
-                <div className="flex items-center justify-between border-t border-border/60 px-5 py-2.5">
+                <div className="relative z-10 flex items-center justify-between border-t border-border/60 px-5 py-2.5 pointer-events-none [&_button]:pointer-events-auto">
                   <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Clock className="size-3 shrink-0" />
                     {formatDate(cv.updated_at)}
