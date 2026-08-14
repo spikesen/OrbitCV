@@ -287,6 +287,22 @@ export function CvDocument({ sections, profile }: Props) {
             </Text>
           </View>
         )}
+
+        {sections.references.length > 0 && (
+          <View>
+            <Text style={styles.sectionTitle}>References</Text>
+            {sections.references.map((ref) => (
+              <View key={ref.id} style={styles.certRow} wrap={false}>
+                <Text style={styles.certTitle}>
+                  {ref.name}
+                  {ref.title || ref.company ? `, ${[ref.title, ref.company].filter(Boolean).join(", ")}` : ""}
+                  {ref.relationship ? ` (${ref.relationship})` : ""}
+                </Text>
+                <Text style={styles.certDate}>{[ref.email, ref.phone].filter(Boolean).join(" · ")}</Text>
+              </View>
+            ))}
+          </View>
+        )}
       </Page>
     </Document>
   );

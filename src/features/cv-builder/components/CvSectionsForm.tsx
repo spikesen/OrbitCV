@@ -8,6 +8,7 @@ import { CertificationsSection } from "@/features/cv-builder/components/Certific
 import { ProjectsSection } from "@/features/cv-builder/components/ProjectsSection";
 import { SkillGroupsEditor } from "@/features/cv-builder/components/SkillGroupsEditor";
 import { LanguagesSection } from "@/features/cv-builder/components/LanguagesSection";
+import { ReferencesSection } from "@/features/cv-builder/components/ReferencesSection";
 import { Textarea } from "@/components/ui/textarea";
 import { bulletFormula, summaryFormula } from "@/features/guidance/content";
 
@@ -109,6 +110,18 @@ export function CvSectionsForm({ sections, onChange, profile }: Props) {
         <LanguagesSection
           entries={sections.languages}
           onChange={(languages) => onChange({ ...sections, languages })}
+        />
+      </section>
+
+      <section className="mb-10">
+        <SectionHeading>References</SectionHeading>
+        <Hint>
+          Only add real contacts who have agreed to be a reference. Leave this empty rather than
+          writing "References available upon request", it's assumed and wastes space.
+        </Hint>
+        <ReferencesSection
+          entries={sections.references}
+          onChange={(references) => onChange({ ...sections, references })}
         />
       </section>
     </>

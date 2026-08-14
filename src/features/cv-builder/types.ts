@@ -81,6 +81,16 @@ export interface CertificationEntry {
   note: string;
 }
 
+export interface ReferenceEntry {
+  id: string;
+  name: string;
+  title: string;
+  company: string;
+  email: string;
+  phone: string;
+  relationship: string;
+}
+
 export interface CvSections {
   personal: PersonalInfo;
   summary: string;
@@ -90,6 +100,7 @@ export interface CvSections {
   certifications: CertificationEntry[];
   languages: LanguageEntry[];
   projects: ProjectEntry[];
+  references: ReferenceEntry[];
 }
 
 export interface CvMaster {
@@ -132,6 +143,7 @@ export const emptySections: CvSections = {
   certifications: [],
   languages: [],
   projects: [],
+  references: [],
 };
 
 export function newId(): string {
