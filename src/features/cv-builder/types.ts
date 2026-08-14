@@ -65,11 +65,20 @@ export function allSkills(groups: SkillGroup[]): string[] {
   return groups.flatMap((g) => g.skills);
 }
 
+export type CertificationKind = "single" | "group";
+
 export interface CertificationEntry {
   id: string;
+  kind: CertificationKind;
+  // "single": one standout certificate, uses name/issuer/year.
   name: string;
   issuer: string;
   year: string;
+  // "group": a bundle of smaller items (e.g. several CTF participations)
+  // shown as one compact line, uses name as the group label, items as the
+  // comma-separated list, and note for a trailing supplementary detail.
+  items: string[];
+  note: string;
 }
 
 export interface CvSections {
@@ -141,6 +150,21 @@ function normalizeSkillGroups(raw: unknown): SkillGroup[] {
   return raw as SkillGroup[];
 }
 
+// CVs saved before the group/kind fields existed are missing them entirely.
+// Default to "single" so they render exactly as before.
+function normalizeCertifications(raw: unknown): CertificationEntry[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((entry) => ({
+    kind: "single",
+    name: "",
+    issuer: "",
+    year: "",
+    items: [],
+    note: "",
+    ...entry,
+  }));
+}
+
 // Deep-merges stored sections onto the current defaults so CVs saved before
 // a new field was added (e.g. links, linkedinUrl) load without crashing on
 // undefined nested values.
@@ -150,5 +174,6 @@ export function normalizeSections(loaded: Partial<CvSections> | undefined): CvSe
     ...loaded,
     personal: { ...emptyPersonalInfo, ...loaded?.personal },
     skills: normalizeSkillGroups(loaded?.skills),
+    certifications: normalizeCertifications(loaded?.certifications),
   };
 }

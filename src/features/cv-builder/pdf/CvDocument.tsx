@@ -92,6 +92,29 @@ const styles = StyleSheet.create({
   skillChip: {
     fontSize: 9.5,
   },
+  certRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 3,
+  },
+  certTitle: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: 9.5,
+  },
+  certDate: {
+    fontSize: 9,
+    color: "#3a3a38",
+  },
+  certGroupLine: {
+    fontSize: 9.5,
+    marginBottom: 3,
+  },
+  certGroupLabel: {
+    fontFamily: "Helvetica-Bold",
+  },
+  certGroupNote: {
+    color: "#3a3a38",
+  },
 });
 
 function formatDateRange(start: string, end: string, current: boolean) {
@@ -212,15 +235,23 @@ export function CvDocument({ sections, profile }: Props) {
         {sections.certifications.length > 0 && (
           <View>
             <Text style={styles.sectionTitle}>Certifications</Text>
-            {sections.certifications.map((entry) => (
-              <View key={entry.id} style={[styles.entry, styles.entryHeaderRow]} wrap={false}>
-                <Text style={styles.entryTitle}>
-                  {entry.name}
-                  {entry.issuer ? `, ${entry.issuer}` : ""}
+            {sections.certifications.map((entry) =>
+              entry.kind === "group" ? (
+                <Text key={entry.id} style={styles.certGroupLine}>
+                  <Text style={styles.certGroupLabel}>{entry.name}: </Text>
+                  {entry.items.join(", ")}
+                  {entry.note && <Text style={styles.certGroupNote}> | {entry.note}</Text>}
                 </Text>
-                {entry.year && <Text style={styles.dateRange}>{entry.year}</Text>}
-              </View>
-            ))}
+              ) : (
+                <View key={entry.id} style={styles.certRow} wrap={false}>
+                  <Text style={styles.certTitle}>
+                    {entry.name}
+                    {entry.issuer && entry.issuer !== entry.name ? `, ${entry.issuer}` : ""}
+                  </Text>
+                  {entry.year && <Text style={styles.certDate}>{entry.year}</Text>}
+                </View>
+              ),
+            )}
           </View>
         )}
 

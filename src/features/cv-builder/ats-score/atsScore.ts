@@ -68,6 +68,8 @@ function flattenCvText(sections: CvSections): string {
   for (const cert of sections.certifications) {
     if (cert.name) parts.push(cert.name);
     if (cert.issuer) parts.push(cert.issuer);
+    parts.push(...cert.items);
+    if (cert.note) parts.push(cert.note);
   }
   parts.push(...allSkills(sections.skills));
   for (const lang of sections.languages) {
