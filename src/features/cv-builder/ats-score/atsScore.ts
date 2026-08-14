@@ -1,4 +1,4 @@
-import type { CvSections } from "@/features/cv-builder/types";
+import { allSkills, type CvSections } from "@/features/cv-builder/types";
 
 export interface AtsCheck {
   id: string;
@@ -65,7 +65,11 @@ function flattenCvText(sections: CvSections): string {
     if (edu.field) parts.push(edu.field);
     if (edu.institution) parts.push(edu.institution);
   }
-  parts.push(...sections.skills);
+  for (const cert of sections.certifications) {
+    if (cert.name) parts.push(cert.name);
+    if (cert.issuer) parts.push(cert.issuer);
+  }
+  parts.push(...allSkills(sections.skills));
   for (const lang of sections.languages) {
     if (lang.language) parts.push(lang.language);
   }
@@ -227,13 +231,14 @@ export function scoreAts(sections: CvSections): AtsScoreResult {
     category: "sections",
   });
 
+  const skillCount = allSkills(sections.skills).length;
   checks.push({
     id: "sec-skills",
     label: "Skills section (5+ listed)",
-    passed: sections.skills.length >= 5,
+    passed: skillCount >= 5,
     weight: 2,
     category: "sections",
-    detail: `${sections.skills.length} listed`,
+    detail: `${skillCount} listed`,
   });
 
   // ═══════════════════════════════════════════════
@@ -251,13 +256,19 @@ export function scoreAts(sections: CvSections): AtsScoreResult {
   });
 
   const certs = extractCertifications(allText);
+  const certCount = sections.certifications.length;
   checks.push({
     id: "kw-certifications",
     label: "Certifications (if applicable)",
     passed: true, // not required, but bonus tracked
     weight: 0,
     category: "keywords",
-    detail: certs.length > 0 ? `${certs.length} found: ${certs.join(", ")}` : "Optional",
+    detail:
+      certCount > 0
+        ? `${certCount} listed in Certifications`
+        : certs.length > 0
+          ? `Mentioned in text but not in a dedicated Certifications section: ${certs.join(", ")}`
+          : "Optional",
   });
 
   // Skill keyword density in summary

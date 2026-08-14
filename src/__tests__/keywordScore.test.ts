@@ -15,7 +15,7 @@ describe("scoreCvAgainstJd", () => {
     const sections: CvSections = {
       ...emptySections,
       summary: "Experienced project manager",
-      skills: ["waterfall", "gantt"],
+      skills: [{ id: "s1", category: "Skills", skills: ["waterfall", "gantt"] }],
     };
     const result = scoreCvAgainstJd("react typescript frontend developer", sections);
     expect(result.score).toBe(0);
@@ -26,7 +26,7 @@ describe("scoreCvAgainstJd", () => {
     const sections: CvSections = {
       ...emptySections,
       summary: "Frontend developer with React and TypeScript experience",
-      skills: ["react", "typescript", "css"],
+      skills: [{ id: "s1", category: "Skills", skills: ["react", "typescript", "css"] }],
     };
     const result = scoreCvAgainstJd("react typescript frontend developer", sections);
     expect(result.score).toBeGreaterThan(0);
@@ -37,7 +37,7 @@ describe("scoreCvAgainstJd", () => {
   it("filters out stopwords from JD", () => {
     const sections: CvSections = {
       ...emptySections,
-      skills: ["react"],
+      skills: [{ id: "s1", category: "Skills", skills: ["react"] }],
     };
     const result = scoreCvAgainstJd("a the and or but react", sections);
     // Stopwords (a, the, and, or, but) should be filtered; only "react" remains
@@ -72,7 +72,7 @@ describe("scoreCvAgainstJd", () => {
     const sections: CvSections = {
       ...emptySections,
       summary: "React TypeScript developer",
-      skills: ["react", "typescript"],
+      skills: [{ id: "s1", category: "Skills", skills: ["react", "typescript"] }],
     };
     const result = scoreCvAgainstJd("react typescript angular python go rust", sections);
     expect(result.score).toBeGreaterThanOrEqual(0);

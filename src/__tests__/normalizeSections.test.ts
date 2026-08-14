@@ -16,11 +16,19 @@ describe("normalizeSections", () => {
   it("preserves provided fields", () => {
     const input: Partial<CvSections> = {
       summary: "Hello world",
-      skills: ["react", "typescript"],
+      skills: [{ id: "s1", category: "Technical", skills: ["react", "typescript"] }],
     };
     const result = normalizeSections(input);
     expect(result.summary).toBe("Hello world");
-    expect(result.skills).toEqual(["react", "typescript"]);
+    expect(result.skills).toEqual([{ id: "s1", category: "Technical", skills: ["react", "typescript"] }]);
+  });
+
+  it("migrates legacy flat string[] skills into a single group", () => {
+    const oldSections = { skills: ["react", "typescript"] } as unknown as Partial<CvSections>;
+    const result = normalizeSections(oldSections);
+    expect(result.skills).toHaveLength(1);
+    expect(result.skills[0].category).toBe("Skills");
+    expect(result.skills[0].skills).toEqual(["react", "typescript"]);
   });
 
   it("deep-merges personal info with defaults", () => {

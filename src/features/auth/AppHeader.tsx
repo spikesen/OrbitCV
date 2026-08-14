@@ -52,7 +52,7 @@ export function AppHeader() {
           </span>
         </Link>
 
-        {/* Desktop nav — primary links */}
+        {/* Desktop nav, primary links */}
         <nav className="hidden flex-1 items-center gap-0.5 sm:flex">
           {loading ? (
             <div className="flex items-center gap-2">
@@ -99,7 +99,7 @@ export function AppHeader() {
           )}
         </nav>
 
-        {/* Desktop right side — utility links + auth */}
+        {/* Desktop right side, utility links + auth */}
         <div className="hidden items-center gap-1 sm:flex">
           {loading ? (
             <div className="h-7 w-16 animate-pulse rounded-md bg-muted" />

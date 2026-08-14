@@ -87,6 +87,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 4,
+    marginBottom: 2,
   },
   skillChip: {
     fontSize: 9.5,
@@ -194,10 +195,32 @@ export function CvDocument({ sections, profile }: Props) {
           </View>
         )}
 
-        {sections.skills.length > 0 && (
+        {sections.skills.some((g) => g.skills.length > 0) && (
           <View>
             <Text style={styles.sectionTitle}>Skills</Text>
-            <Text style={styles.skillsRow}>{sections.skills.join("  •  ")}</Text>
+            {sections.skills
+              .filter((g) => g.skills.length > 0)
+              .map((group) => (
+                <Text key={group.id} style={styles.skillsRow}>
+                  {group.category ? `${group.category}: ` : ""}
+                  {group.skills.join(", ")}
+                </Text>
+              ))}
+          </View>
+        )}
+
+        {sections.certifications.length > 0 && (
+          <View>
+            <Text style={styles.sectionTitle}>Certifications</Text>
+            {sections.certifications.map((entry) => (
+              <View key={entry.id} style={[styles.entry, styles.entryHeaderRow]} wrap={false}>
+                <Text style={styles.entryTitle}>
+                  {entry.name}
+                  {entry.issuer ? `, ${entry.issuer}` : ""}
+                </Text>
+                {entry.year && <Text style={styles.dateRange}>{entry.year}</Text>}
+              </View>
+            ))}
           </View>
         )}
 

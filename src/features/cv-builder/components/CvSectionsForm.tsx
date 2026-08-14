@@ -4,8 +4,9 @@ import type { RegionProfile } from "@/features/region-profiles/types";
 import { PersonalFields } from "@/features/cv-builder/components/PersonalFields";
 import { ExperienceSection } from "@/features/cv-builder/components/ExperienceSection";
 import { EducationSection } from "@/features/cv-builder/components/EducationSection";
+import { CertificationsSection } from "@/features/cv-builder/components/CertificationsSection";
 import { ProjectsSection } from "@/features/cv-builder/components/ProjectsSection";
-import { SkillsField } from "@/features/cv-builder/components/SkillsField";
+import { SkillGroupsEditor } from "@/features/cv-builder/components/SkillGroupsEditor";
 import { LanguagesSection } from "@/features/cv-builder/components/LanguagesSection";
 import { Textarea } from "@/components/ui/textarea";
 import { bulletFormula, summaryFormula } from "@/features/guidance/content";
@@ -79,7 +80,16 @@ export function CvSectionsForm({ sections, onChange, profile }: Props) {
 
       <section className="mb-10">
         <SectionHeading>Skills</SectionHeading>
-        <SkillsField skills={sections.skills} onChange={(skills) => onChange({ ...sections, skills })} />
+        <Hint>Group skills by category (Technical, Soft Skills, Tools, or your own) so they read clearly.</Hint>
+        <SkillGroupsEditor skills={sections.skills} onChange={(skills) => onChange({ ...sections, skills })} />
+      </section>
+
+      <section className="mb-10">
+        <SectionHeading>Certifications</SectionHeading>
+        <CertificationsSection
+          entries={sections.certifications}
+          onChange={(certifications) => onChange({ ...sections, certifications })}
+        />
       </section>
 
       <section className="mb-10">

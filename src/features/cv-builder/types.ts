@@ -53,12 +53,32 @@ export interface LanguageEntry {
   level: CefrLevel;
 }
 
+export interface SkillGroup {
+  id: string;
+  category: string;
+  skills: string[];
+}
+
+export const SKILL_CATEGORY_PRESETS = ["Technical", "Hard Skills", "Soft Skills", "Tools"];
+
+export function allSkills(groups: SkillGroup[]): string[] {
+  return groups.flatMap((g) => g.skills);
+}
+
+export interface CertificationEntry {
+  id: string;
+  name: string;
+  issuer: string;
+  year: string;
+}
+
 export interface CvSections {
   personal: PersonalInfo;
   summary: string;
   experience: ExperienceEntry[];
   education: EducationEntry[];
-  skills: string[];
+  skills: SkillGroup[];
+  certifications: CertificationEntry[];
   languages: LanguageEntry[];
   projects: ProjectEntry[];
 }
@@ -100,12 +120,25 @@ export const emptySections: CvSections = {
   experience: [],
   education: [],
   skills: [],
+  certifications: [],
   languages: [],
   projects: [],
 };
 
 export function newId(): string {
   return crypto.randomUUID();
+}
+
+// CVs saved before skill categories existed have `skills` as a flat
+// string[]. Wrap those into a single "Skills" group instead of crashing on
+// `.category`/`.skills` access.
+function normalizeSkillGroups(raw: unknown): SkillGroup[] {
+  if (!Array.isArray(raw)) return [];
+  if (raw.length === 0) return [];
+  if (typeof raw[0] === "string") {
+    return [{ id: newId(), category: "Skills", skills: raw as string[] }];
+  }
+  return raw as SkillGroup[];
 }
 
 // Deep-merges stored sections onto the current defaults so CVs saved before
@@ -116,5 +149,6 @@ export function normalizeSections(loaded: Partial<CvSections> | undefined): CvSe
     ...emptySections,
     ...loaded,
     personal: { ...emptyPersonalInfo, ...loaded?.personal },
+    skills: normalizeSkillGroups(loaded?.skills),
   };
 }

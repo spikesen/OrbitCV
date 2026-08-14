@@ -84,6 +84,7 @@ export async function tailorWithBYOK(
     experience: sections.experience,
     education: sections.education,
     skills: sections.skills,
+    certifications: sections.certifications,
     projects: sections.projects,
   };
 

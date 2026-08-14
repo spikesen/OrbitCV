@@ -53,21 +53,29 @@ export function EducationSection({ entries, onChange }: Props) {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor={`edu-start-${entry.id}`}>Start</Label>
+                  <Label htmlFor={`edu-start-${entry.id}`}>Start year</Label>
                   <Input
                     id={`edu-start-${entry.id}`}
-                    type="month"
-                    value={entry.startDate}
-                    onChange={(e) => update(entry.id, { startDate: e.target.value })}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]{4}"
+                    maxLength={4}
+                    placeholder="YYYY"
+                    value={entry.startDate.slice(0, 4)}
+                    onChange={(e) => update(entry.id, { startDate: e.target.value.replace(/\D/g, "").slice(0, 4) })}
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor={`edu-end-${entry.id}`}>End</Label>
+                  <Label htmlFor={`edu-end-${entry.id}`}>End year</Label>
                   <Input
                     id={`edu-end-${entry.id}`}
-                    type="month"
-                    value={entry.endDate}
-                    onChange={(e) => update(entry.id, { endDate: e.target.value })}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]{4}"
+                    maxLength={4}
+                    placeholder="YYYY"
+                    value={entry.endDate.slice(0, 4)}
+                    onChange={(e) => update(entry.id, { endDate: e.target.value.replace(/\D/g, "").slice(0, 4) })}
                   />
                 </div>
               </div>

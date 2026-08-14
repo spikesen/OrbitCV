@@ -63,7 +63,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       tags: job.tags ?? [],
     }));
 
-    // Cache for 5 minutes on Vercel edge — RemoteOK updates infrequently.
+    // Cache for 5 minutes on Vercel edge, RemoteOK updates infrequently.
     res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=60");
     return res.status(200).json({ results });
   } catch (err) {

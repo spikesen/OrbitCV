@@ -93,6 +93,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     experience: sections.experience,
     education: sections.education,
     skills: sections.skills,
+    certifications: sections.certifications,
     projects: sections.projects,
   };
 

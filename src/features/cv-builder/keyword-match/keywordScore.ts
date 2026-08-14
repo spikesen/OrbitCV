@@ -1,4 +1,4 @@
-import type { CvSections } from "@/features/cv-builder/types";
+import { allSkills, type CvSections } from "@/features/cv-builder/types";
 
 // Free, client-side JD-vs-CV keyword overlap. No AI, no dependency needed.
 // Gives instant feedback before (or instead of) AI-assisted tailoring.
@@ -34,7 +34,7 @@ function flattenCv(sections: CvSections): string {
   for (const edu of sections.education) {
     parts.push(edu.degree, edu.field, edu.institution);
   }
-  parts.push(...sections.skills);
+  parts.push(...allSkills(sections.skills));
   for (const proj of sections.projects) {
     parts.push(proj.name, proj.description, ...proj.bullets);
   }
