@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent } from "react";
+import { useState, type ChangeEvent, type KeyboardEvent } from "react";
 import { X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,16 +13,35 @@ interface Props {
 export function TagInput({ tags, onChange, placeholder = "Type and press Enter...", label = "Add items" }: Props) {
   const [draft, setDraft] = useState("");
 
-  function commitDraft() {
-    const value = draft.trim();
-    if (value && !tags.includes(value)) {
-      onChange([...tags, value]);
+  function addTags(values: string[]) {
+    const next = [...tags];
+    for (const raw of values) {
+      const value = raw.trim();
+      if (value && !next.includes(value)) next.push(value);
     }
+    onChange(next);
+  }
+
+  function commitDraft() {
+    addTags([draft]);
     setDraft("");
   }
 
+  // Handles both typing "react," and pasting a whole comma-separated list
+  // ("Python, React, Node.js") at once: any comma in the field's value
+  // immediately splits and commits every segment as its own tag.
+  function handleChange(e: ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    if (value.includes(",")) {
+      addTags(value.split(","));
+      setDraft("");
+    } else {
+      setDraft(value);
+    }
+  }
+
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter" || e.key === ",") {
+    if (e.key === "Enter") {
       e.preventDefault();
       commitDraft();
     } else if (e.key === "Backspace" && draft === "" && tags.length > 0) {
@@ -60,7 +79,7 @@ export function TagInput({ tags, onChange, placeholder = "Type and press Enter..
       <Input
         id={`tag-input-${label}`}
         value={draft}
-        onChange={(e) => setDraft(e.target.value)}
+        onChange={handleChange}
         onKeyDown={handleKeyDown}
         onBlur={commitDraft}
         placeholder={placeholder}

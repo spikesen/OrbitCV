@@ -57,7 +57,7 @@ export function SkillGroupsEditor({ skills: groups, onChange }: Props) {
             <TagInput
               tags={group.skills}
               onChange={(skills) => update(group.id, { skills })}
-              placeholder="Type a skill and press Enter..."
+              placeholder="Type a skill, or paste a comma-separated list..."
               label={`skills in ${group.category || "category"}`}
             />
           </CardContent>
