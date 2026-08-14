@@ -3,7 +3,7 @@ import { AnnotationTag } from "@/features/guidance/AnnotationTag";
 export function BadCvExample() {
   return (
     <div className="overflow-hidden rounded-md border border-border bg-white text-[12px] leading-tight text-neutral-900 shadow-sm">
-      <div className="flex">
+      <div className="flex flex-col sm:flex-row">
         <div className="flex-1 p-6">
           <div className="mb-2 flex items-center gap-3">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-neutral-300 text-[9px] text-neutral-600">
@@ -44,7 +44,7 @@ export function BadCvExample() {
           <AnnotationTag kind="bad">Assumed by every employer, wastes space</AnnotationTag>
         </div>
 
-        <div className="w-28 shrink-0 bg-neutral-800 p-3 text-white">
+        <div className="w-full shrink-0 bg-neutral-800 p-3 text-white sm:w-28">
           <div className="mb-2 text-[10px] font-bold uppercase">Skills</div>
           <ul className="space-y-1 text-[10px]">
             <li>Hard worker</li>

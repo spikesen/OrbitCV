@@ -30,7 +30,7 @@ export function GoodCvExample() {
         <div className="mb-1 border-b border-neutral-200 text-[11px] font-bold tracking-wide uppercase">
           Experience
         </div>
-        <div className="mb-1 flex justify-between font-medium">
+        <div className="mb-1 flex flex-wrap justify-between gap-x-4 font-medium">
           <span>Senior Software Engineer, Acme Corp</span>
           <span className="text-neutral-500">Jan 2022 to Present</span>
         </div>
