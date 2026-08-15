@@ -117,6 +117,7 @@ export interface CvVersion {
   cv_master_id: string;
   label: string;
   target_role: string | null;
+  company: string | null;
   jd_text: string | null;
   sections: CvSections;
   ai_diff: unknown;

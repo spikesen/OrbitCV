@@ -158,11 +158,12 @@ export async function generateCoverLetterBYOK(
   iv: string,
   jdText: string,
   targetRole: string,
+  companyName: string,
   sections: CvSections,
   provider: Provider = "gemini",
 ): Promise<string> {
   const apiKey = await decryptApiKey(encryptedKey, iv);
-  const prompt = buildCoverLetterPrompt(jdText, targetRole, sections, sections.personal.fullName);
+  const prompt = buildCoverLetterPrompt(jdText, targetRole, companyName, sections, sections.personal.fullName);
   const text = await callProvider(apiKey, provider, COVER_LETTER_SYSTEM_PROMPT, prompt);
   return text.trim();
 }

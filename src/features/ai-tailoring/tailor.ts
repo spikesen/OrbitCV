@@ -60,6 +60,7 @@ async function callSharedGenerate(
 interface CoverLetterParams {
   jdText: string;
   targetRole: string;
+  companyName: string;
   sections: CvSections;
   encryptedKey: string | null;
   iv: string | null;
@@ -74,10 +75,10 @@ interface CoverLetterResult {
 }
 
 export async function generateCoverLetter(params: CoverLetterParams): Promise<CoverLetterResult> {
-  const { jdText, targetRole, sections, encryptedKey, iv, provider, sessionToken } = params;
+  const { jdText, targetRole, companyName, sections, encryptedKey, iv, provider, sessionToken } = params;
 
   if (encryptedKey && iv) {
-    const text = await generateCoverLetterBYOK(encryptedKey, iv, jdText, targetRole, sections, provider);
+    const text = await generateCoverLetterBYOK(encryptedKey, iv, jdText, targetRole, companyName, sections, provider);
     return { text, source: "byok" };
   }
 
@@ -87,7 +88,7 @@ export async function generateCoverLetter(params: CoverLetterParams): Promise<Co
       "Content-Type": "application/json",
       Authorization: `Bearer ${sessionToken}`,
     },
-    body: JSON.stringify({ jdText, sections, targetRole, mode: "cover-letter" }),
+    body: JSON.stringify({ jdText, sections, targetRole, companyName, mode: "cover-letter" }),
   });
 
   if (res.status === 429) {

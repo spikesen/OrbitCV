@@ -184,7 +184,8 @@ export function JobSearchPage() {
   useEffect(() => {
     if (!session?.user) return;
     getUserProfile(session.user.id).then(setProfile).catch(() => setProfile(null));
-  }, [session?.user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id]);
 
   async function runSearch(q: string) {
     setSearched(true);

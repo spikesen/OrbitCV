@@ -30,6 +30,9 @@ export function ProfilePage() {
   const [industries, setIndustries] = useState<string[]>([]);
   const [languages, setLanguages] = useState<string[]>([]);
 
+  // Depends on the stable user id, not the session object itself: Supabase
+  // issues a new session object (same user) on background token refresh,
+  // and re-running this on that would wipe unsaved in-progress edits.
   useEffect(() => {
     if (!session?.user) return;
     getUserProfile(session.user.id)
@@ -47,7 +50,8 @@ export function ProfilePage() {
       })
       .catch((err) => setError(err instanceof Error ? err.message : "Failed to load profile."))
       .finally(() => setLoading(false));
-  }, [session?.user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id]);
 
   async function handleSave() {
     if (!session?.user) return;

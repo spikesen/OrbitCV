@@ -27,6 +27,7 @@ export function CvVersionsPanel({ cvMaster, currentSections }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [label, setLabel] = useState("");
   const [targetRole, setTargetRole] = useState("");
+  const [company, setCompany] = useState("");
   const [jdText, setJdText] = useState("");
   const [creating, setCreating] = useState(false);
   const [smartTailoring, setSmartTailoring] = useState(false);
@@ -64,7 +65,8 @@ export function CvVersionsPanel({ cvMaster, currentSections }: Props) {
         }
       })
       .catch(() => {});
-  }, [session?.user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id]);
 
   async function handleCreate() {
     setCreating(true);
@@ -76,9 +78,11 @@ export function CvVersionsPanel({ cvMaster, currentSections }: Props) {
         targetRole,
         jdText,
         currentSections,
+        company,
       );
       setLabel("");
       setTargetRole("");
+      setCompany("");
       setJdText("");
       setShowForm(false);
       await refresh();
@@ -116,6 +120,7 @@ export function CvVersionsPanel({ cvMaster, currentSections }: Props) {
         targetRole,
         jdText,
         result.sections,
+        company,
       );
 
       if (result.stillOverOnePage) {
@@ -170,6 +175,14 @@ export function CvVersionsPanel({ cvMaster, currentSections }: Props) {
             <div className="flex flex-col gap-1.5">
               <Label>Target role</Label>
               <Input value={targetRole} onChange={(e) => setTargetRole(e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>Company</Label>
+              <Input
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                placeholder="Optional, helps a generated cover letter address them by name"
+              />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label>Job description</Label>
@@ -249,7 +262,8 @@ export function CvVersionsPanel({ cvMaster, currentSections }: Props) {
                 </Button>
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground">
-                {version.target_role && <span>{version.target_role} · </span>}
+                {[version.target_role, version.company].filter(Boolean).join(" @ ")}
+                {(version.target_role || version.company) && " · "}
                 Created {new Date(version.created_at).toLocaleString()}
               </CardContent>
             </Card>

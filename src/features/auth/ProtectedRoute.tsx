@@ -34,6 +34,7 @@ export function ProtectedRoute() {
       .catch(() => { if (!cancelled) setHasProfile(false); });
 
     return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.id, loading, location.pathname]);
 
   // Still waiting on session resolution.

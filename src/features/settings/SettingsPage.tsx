@@ -51,7 +51,8 @@ export function SettingsPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [session?.user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id]);
 
   async function handleSaveKey() {
     if (!keyInput || !session?.user) return;

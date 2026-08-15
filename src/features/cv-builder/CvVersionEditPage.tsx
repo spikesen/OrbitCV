@@ -26,13 +26,22 @@ export function CvVersionEditPage() {
   const [regionProfileId, setRegionProfileId] = useState("international");
   const [label, setLabel] = useState("");
   const [targetRole, setTargetRole] = useState("");
+  const [company, setCompany] = useState("");
   const [jdText, setJdText] = useState("");
   const [sections, setSections] = useState<CvSections>(emptySections);
   const [coverLetter, setCoverLetter] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const lastSavedRef = useRef<
-    { label: string; targetRole: string; jdText: string; sections: CvSections; coverLetter: string } | null
+    | {
+        label: string;
+        targetRole: string;
+        company: string;
+        jdText: string;
+        sections: CvSections;
+        coverLetter: string;
+      }
+    | null
   >(null);
   const [exporting, setExporting] = useState(false);
   const [exportingLetter, setExportingLetter] = useState(false);
@@ -43,6 +52,13 @@ export function CvVersionEditPage() {
   const [userKey, setUserKey] = useState<{ encrypted: string; iv: string } | null>(null);
   const [userProvider, setUserProvider] = useState<"gemini" | "openrouter">("gemini");
 
+  // Loads the CV/version data exactly once per version. Deliberately does
+  // NOT depend on `session`: Supabase hands back a new session object
+  // (new reference, same user) on background token refreshes, and this
+  // effect running again would blow away any unsaved edits, including a
+  // just-generated cover letter that hasn't been saved yet. See the bug
+  // this fixed: generating a cover letter, then having it silently vanish
+  // a little while later with no save action taken.
   useEffect(() => {
     if (!masterId || !versionId) return;
     Promise.all([getCvMaster(masterId), getCvVersion(versionId)])
@@ -51,6 +67,7 @@ export function CvVersionEditPage() {
         setVersion(loadedVersion);
         setLabel(loadedVersion.label);
         setTargetRole(loadedVersion.target_role ?? "");
+        setCompany(loadedVersion.company ?? "");
         setJdText(loadedVersion.jd_text ?? "");
         const loadedSections = normalizeSections(loadedVersion.sections);
         setSections(loadedSections);
@@ -59,6 +76,7 @@ export function CvVersionEditPage() {
         lastSavedRef.current = {
           label: loadedVersion.label,
           targetRole: loadedVersion.target_role ?? "",
+          company: loadedVersion.company ?? "",
           jdText: loadedVersion.jd_text ?? "",
           sections: loadedSections,
           coverLetter: loadedCoverLetter,
@@ -66,21 +84,25 @@ export function CvVersionEditPage() {
       })
       .catch((err) => setError(err instanceof Error ? err.message : "Failed to load version."))
       .finally(() => setLoading(false));
+  }, [masterId, versionId]);
 
-    // Load user's API key settings for BYOK tailoring.
-    if (session?.user) {
-      getUserSettings(session.user.id)
-        .then((settings) => {
-          if (settings.ai_key_encrypted && settings.ai_key_iv) {
-            setUserKey({ encrypted: settings.ai_key_encrypted, iv: settings.ai_key_iv });
-          }
-          if (settings.ai_key_provider === "openrouter" || settings.ai_key_provider === "gemini") {
-            setUserProvider(settings.ai_key_provider);
-          }
-        })
-        .catch(() => {});
-    }
-  }, [masterId, versionId, session?.user]);
+  // Separate effect for BYOK settings: fine for this to react to the
+  // signed-in user's id changing, it only ever sets userKey/userProvider,
+  // never any of the user's in-progress edits above.
+  useEffect(() => {
+    if (!session?.user) return;
+    getUserSettings(session.user.id)
+      .then((settings) => {
+        if (settings.ai_key_encrypted && settings.ai_key_iv) {
+          setUserKey({ encrypted: settings.ai_key_encrypted, iv: settings.ai_key_iv });
+        }
+        if (settings.ai_key_provider === "openrouter" || settings.ai_key_provider === "gemini") {
+          setUserProvider(settings.ai_key_provider);
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id]);
 
   const profile = getRegionProfile(regionProfileId);
 
@@ -92,11 +114,12 @@ export function CvVersionEditPage() {
       await updateCvVersion(version.id, {
         label,
         target_role: targetRole || null,
+        company: company || null,
         jd_text: jdText || null,
         sections,
         cover_letter: coverLetter || null,
       });
-      lastSavedRef.current = { label, targetRole, jdText, sections, coverLetter };
+      lastSavedRef.current = { label, targetRole, company, jdText, sections, coverLetter };
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save version.");
     } finally {
@@ -148,6 +171,7 @@ export function CvVersionEditPage() {
       const result = await generateCoverLetter({
         jdText,
         targetRole,
+        companyName: company,
         sections,
         encryptedKey: userKey?.encrypted ?? null,
         iv: userKey?.iv ?? null,
@@ -193,7 +217,8 @@ export function CvVersionEditPage() {
 
   const isSaved =
     lastSavedRef.current !== null &&
-    JSON.stringify({ label, targetRole, jdText, sections, coverLetter }) === JSON.stringify(lastSavedRef.current);
+    JSON.stringify({ label, targetRole, company, jdText, sections, coverLetter }) ===
+      JSON.stringify(lastSavedRef.current);
 
   if (loading) {
     return <LoadingPage />;
@@ -276,6 +301,15 @@ export function CvVersionEditPage() {
                   Find jobs for this role
                 </Link>
               )}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="company-name">Company</Label>
+              <Input
+                id="company-name"
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                placeholder="Optional, helps the cover letter address them by name"
+              />
             </div>
 
             <div className="flex flex-col gap-1.5">

@@ -103,6 +103,7 @@ export async function createCvVersion(
   targetRole: string,
   jdText: string,
   sections: CvSections,
+  company: string = "",
 ): Promise<CvVersion> {
   const { data, error } = await supabase
     .from("cv_versions")
@@ -110,6 +111,7 @@ export async function createCvVersion(
       cv_master_id: cvMasterId,
       label,
       target_role: targetRole || null,
+      company: company || null,
       jd_text: jdText || null,
       sections,
     })
@@ -122,7 +124,7 @@ export async function createCvVersion(
 
 export async function updateCvVersion(
   id: string,
-  patch: Partial<Pick<CvVersion, "label" | "target_role" | "jd_text" | "sections" | "cover_letter">>,
+  patch: Partial<Pick<CvVersion, "label" | "target_role" | "company" | "jd_text" | "sections" | "cover_letter">>,
 ): Promise<CvVersion> {
   const { data, error } = await supabase
     .from("cv_versions")

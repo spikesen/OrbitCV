@@ -77,7 +77,9 @@ export const COVER_LETTER_SYSTEM_PROMPT = `You are an expert cover letter writer
 
 Rules:
 - Do not fabricate experience, employers, titles, or achievements not present in the CV.
-- 3 to 4 short paragraphs: an opening naming the role and a hook, one or two paragraphs connecting specific real experience from the CV to what the job description asks for, and a brief closing.
+- Determine the employer's name: use the company name if one is explicitly provided below. If none is provided, look for it in the job description text. If you genuinely cannot determine a real company name from either source, use "Dear Hiring Manager" and do not reference a company by name anywhere, never invent or guess a company name.
+- When a real company name is known, address the letter to that company (e.g. "Dear [Company] Hiring Team") and reference the company by name at least once in the body, not just the greeting, this is what makes a letter read as written for this employer specifically rather than a generic template.
+- 3 to 4 short paragraphs: an opening naming the role (and company, if known) with a hook, one or two paragraphs connecting specific real experience from the CV to what the job description asks for, and a brief closing.
 - Reference concrete, specific achievements from the CV (with real numbers where the CV has them), not generic claims like "I am a hard worker."
 - Professional but not stiff or full of cliches, no "I am writing to express my interest" or "to whom it may concern" style filler.
 - Do not include a letterhead, date, or address block, that's handled separately. Start directly with the greeting.
@@ -87,6 +89,7 @@ Rules:
 export function buildCoverLetterPrompt(
   jdText: string,
   targetRole: string,
+  companyName: string,
   sections: object,
   applicantName: string,
 ): string {
@@ -94,6 +97,7 @@ export function buildCoverLetterPrompt(
 ${jdText}
 
 Target role: ${targetRole || "the role described above"}
+Company name: ${companyName || "(not provided, look for it in the job description, or use no company name if it cannot be determined)"}
 Applicant name: ${applicantName || "the applicant"}
 
 Candidate's CV (JSON):
