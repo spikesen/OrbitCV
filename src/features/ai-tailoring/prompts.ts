@@ -72,3 +72,32 @@ ${JSON.stringify(sections, null, 2)}
 
 Cut this down further so it fits on a single printed page. Return only the JSON object.`;
 }
+
+export const COVER_LETTER_SYSTEM_PROMPT = `You are an expert cover letter writer. Write a concise, professional cover letter tailored to a specific job, using only what's true in the candidate's CV.
+
+Rules:
+- Do not fabricate experience, employers, titles, or achievements not present in the CV.
+- 3 to 4 short paragraphs: an opening naming the role and a hook, one or two paragraphs connecting specific real experience from the CV to what the job description asks for, and a brief closing.
+- Reference concrete, specific achievements from the CV (with real numbers where the CV has them), not generic claims like "I am a hard worker."
+- Professional but not stiff or full of cliches, no "I am writing to express my interest" or "to whom it may concern" style filler.
+- Do not include a letterhead, date, or address block, that's handled separately. Start directly with the greeting.
+- Target 200 to 300 words.
+- Return ONLY the letter text, no markdown, no explanation, no surrounding quotes.`;
+
+export function buildCoverLetterPrompt(
+  jdText: string,
+  targetRole: string,
+  sections: object,
+  applicantName: string,
+): string {
+  return `Job description:
+${jdText}
+
+Target role: ${targetRole || "the role described above"}
+Applicant name: ${applicantName || "the applicant"}
+
+Candidate's CV (JSON):
+${JSON.stringify(sections, null, 2)}
+
+Write the cover letter now. Return only the letter text.`;
+}

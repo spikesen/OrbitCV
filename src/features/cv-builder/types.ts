@@ -120,6 +120,7 @@ export interface CvVersion {
   jd_text: string | null;
   sections: CvSections;
   ai_diff: unknown;
+  cover_letter: string | null;
   created_at: string;
 }
 

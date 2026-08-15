@@ -122,7 +122,7 @@ export async function createCvVersion(
 
 export async function updateCvVersion(
   id: string,
-  patch: Partial<Pick<CvVersion, "label" | "target_role" | "jd_text" | "sections">>,
+  patch: Partial<Pick<CvVersion, "label" | "target_role" | "jd_text" | "sections" | "cover_letter">>,
 ): Promise<CvVersion> {
   const { data, error } = await supabase
     .from("cv_versions")

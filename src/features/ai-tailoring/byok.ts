@@ -6,6 +6,8 @@ import {
   buildGeneratePrompt,
   TRIM_SYSTEM_PROMPT,
   buildTrimPrompt,
+  COVER_LETTER_SYSTEM_PROMPT,
+  buildCoverLetterPrompt,
 } from "@/features/ai-tailoring/prompts";
 import type { AiSuggestion } from "@/features/ai-tailoring/types";
 import { normalizeSections, type CvSections } from "@/features/cv-builder/types";
@@ -149,4 +151,18 @@ export async function trimCvBYOK(
   const prompt = buildTrimPrompt(jdText, sections);
   const text = await callProvider(apiKey, provider, TRIM_SYSTEM_PROMPT, prompt);
   return extractJsonObject(text);
+}
+
+export async function generateCoverLetterBYOK(
+  encryptedKey: string,
+  iv: string,
+  jdText: string,
+  targetRole: string,
+  sections: CvSections,
+  provider: Provider = "gemini",
+): Promise<string> {
+  const apiKey = await decryptApiKey(encryptedKey, iv);
+  const prompt = buildCoverLetterPrompt(jdText, targetRole, sections, sections.personal.fullName);
+  const text = await callProvider(apiKey, provider, COVER_LETTER_SYSTEM_PROMPT, prompt);
+  return text.trim();
 }

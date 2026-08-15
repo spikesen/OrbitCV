@@ -1,6 +1,11 @@
 import type { CvSections } from "@/features/cv-builder/types";
 import type { AiSuggestion } from "@/features/ai-tailoring/types";
-import { tailorWithBYOK, generateOnePageCvBYOK, trimCvBYOK } from "@/features/ai-tailoring/byok";
+import {
+  tailorWithBYOK,
+  generateOnePageCvBYOK,
+  trimCvBYOK,
+  generateCoverLetterBYOK,
+} from "@/features/ai-tailoring/byok";
 
 type Provider = "gemini" | "openrouter";
 
@@ -50,6 +55,51 @@ async function callSharedGenerate(
 
   const data = await res.json();
   return { sections: data.sections, source: "shared", remaining: data.remaining };
+}
+
+interface CoverLetterParams {
+  jdText: string;
+  targetRole: string;
+  sections: CvSections;
+  encryptedKey: string | null;
+  iv: string | null;
+  provider?: Provider;
+  sessionToken: string;
+}
+
+interface CoverLetterResult {
+  text: string;
+  source: "byok" | "shared";
+  remaining?: number;
+}
+
+export async function generateCoverLetter(params: CoverLetterParams): Promise<CoverLetterResult> {
+  const { jdText, targetRole, sections, encryptedKey, iv, provider, sessionToken } = params;
+
+  if (encryptedKey && iv) {
+    const text = await generateCoverLetterBYOK(encryptedKey, iv, jdText, targetRole, sections, provider);
+    return { text, source: "byok" };
+  }
+
+  const res = await fetch("/api/ai/generate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${sessionToken}`,
+    },
+    body: JSON.stringify({ jdText, sections, targetRole, mode: "cover-letter" }),
+  });
+
+  if (res.status === 429) {
+    const data = await res.json();
+    throw new Error(data.error ?? "Daily limit reached");
+  }
+  if (!res.ok) {
+    throw new Error(`Cover letter generation failed (${res.status})`);
+  }
+
+  const data = await res.json();
+  return { text: data.text, source: "shared", remaining: data.remaining };
 }
 
 // "Smart Tailor" (generate mode): builds a full condensed one-page CV

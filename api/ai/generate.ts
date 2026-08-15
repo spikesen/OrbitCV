@@ -31,6 +31,17 @@ Rules:
 - Do not fabricate anything new. Only remove or shorten existing content.
 - Return ONLY a valid JSON object with the exact same shape as the input, no markdown fences, no explanation.`;
 
+const COVER_LETTER_SYSTEM_PROMPT = `You are an expert cover letter writer. Write a concise, professional cover letter tailored to a specific job, using only what's true in the candidate's CV.
+
+Rules:
+- Do not fabricate experience, employers, titles, or achievements not present in the CV.
+- 3 to 4 short paragraphs: an opening naming the role and a hook, one or two paragraphs connecting specific real experience from the CV to what the job description asks for, and a brief closing.
+- Reference concrete, specific achievements from the CV (with real numbers where the CV has them), not generic claims like "I am a hard worker."
+- Professional but not stiff or full of cliches, no "I am writing to express my interest" or "to whom it may concern" style filler.
+- Do not include a letterhead, date, or address block, that's handled separately. Start directly with the greeting.
+- Target 200 to 300 words.
+- Return ONLY the letter text, no markdown, no explanation, no surrounding quotes.`;
+
 const DAILY_CAP = 5;
 
 interface GeminiResponse {
@@ -78,10 +89,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  const { jdText, sections, mode } = req.body as {
+  const { jdText, sections, mode, targetRole } = req.body as {
     jdText: string;
     sections: Record<string, unknown>;
-    mode?: "generate" | "trim";
+    mode?: "generate" | "trim" | "cover-letter";
+    targetRole?: string;
   };
 
   if (!jdText || !sections) {
@@ -89,10 +101,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const isTrim = mode === "trim";
-  const systemPrompt = isTrim ? TRIM_SYSTEM_PROMPT : GENERATE_SYSTEM_PROMPT;
-  const prompt = isTrim
-    ? `Job description:\n${jdText}\n\nCurrent CV (still over one page):\n${JSON.stringify(sections, null, 2)}\n\nCut this down further so it fits on a single printed page. Return only the JSON object.`
-    : `Job description:\n${jdText}\n\nFull master CV, all sections (JSON):\n${JSON.stringify(sections, null, 2)}\n\nProduce a condensed, one-page, role-tailored version of this CV as a JSON object with the exact same shape as the input above. Return only the JSON object.`;
+  const isCoverLetter = mode === "cover-letter";
+  const systemPrompt = isCoverLetter
+    ? COVER_LETTER_SYSTEM_PROMPT
+    : isTrim
+      ? TRIM_SYSTEM_PROMPT
+      : GENERATE_SYSTEM_PROMPT;
+  const prompt = isCoverLetter
+    ? `Job description:\n${jdText}\n\nTarget role: ${targetRole || "the role described above"}\n\nCandidate's CV (JSON):\n${JSON.stringify(sections, null, 2)}\n\nWrite the cover letter now. Return only the letter text.`
+    : isTrim
+      ? `Job description:\n${jdText}\n\nCurrent CV (still over one page):\n${JSON.stringify(sections, null, 2)}\n\nCut this down further so it fits on a single printed page. Return only the JSON object.`
+      : `Job description:\n${jdText}\n\nFull master CV, all sections (JSON):\n${JSON.stringify(sections, null, 2)}\n\nProduce a condensed, one-page, role-tailored version of this CV as a JSON object with the exact same shape as the input above. Return only the JSON object.`;
 
   const geminiRes = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${GEMINI_API_KEY}`,
@@ -114,16 +133,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const data: GeminiResponse = await geminiRes.json();
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
 
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    return res.status(502).json({ error: "No valid JSON in AI response" });
-  }
+  let responseBody: Record<string, unknown>;
 
-  const sectionsResult = JSON.parse(jsonMatch[0]);
+  if (isCoverLetter) {
+    if (!text.trim()) {
+      return res.status(502).json({ error: "Empty AI response" });
+    }
+    responseBody = { text: text.trim() };
+  } else {
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return res.status(502).json({ error: "No valid JSON in AI response" });
+    }
+    responseBody = { sections: JSON.parse(jsonMatch[0]) };
+  }
 
   await supabase
     .from("ai_usage")
     .upsert({ user_id: userId, date: today, count: currentCount + 1 }, { onConflict: "user_id,date" });
 
-  return res.status(200).json({ sections: sectionsResult, remaining: DAILY_CAP - currentCount - 1 });
+  return res.status(200).json({ ...responseBody, remaining: DAILY_CAP - currentCount - 1 });
 }

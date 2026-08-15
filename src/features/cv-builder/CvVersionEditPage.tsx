@@ -9,14 +9,14 @@ import { CvSectionsForm } from "@/features/cv-builder/components/CvSectionsForm"
 import { KeywordScoreCard } from "@/features/cv-builder/keyword-match/KeywordScoreCard";
 import { AtsScoreCard } from "@/features/cv-builder/ats-score/AtsScoreCard";
 import { getUserSettings } from "@/features/settings/api";
-import { tailorCv, applySuggestions } from "@/features/ai-tailoring/tailor";
+import { tailorCv, applySuggestions, generateCoverLetter } from "@/features/ai-tailoring/tailor";
 import type { AiSuggestion } from "@/features/ai-tailoring/types";
 import { AiSuggestionPanel } from "@/features/ai-tailoring/AiSuggestionPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Sparkles, Wand2 } from "lucide-react";
+import { Sparkles, Wand2, Mail } from "lucide-react";
 
 export function CvVersionEditPage() {
   const { id: masterId, versionId } = useParams<{ id: string; versionId: string }>();
@@ -28,13 +28,18 @@ export function CvVersionEditPage() {
   const [targetRole, setTargetRole] = useState("");
   const [jdText, setJdText] = useState("");
   const [sections, setSections] = useState<CvSections>(emptySections);
+  const [coverLetter, setCoverLetter] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const lastSavedRef = useRef<{ label: string; targetRole: string; jdText: string; sections: CvSections } | null>(null);
+  const lastSavedRef = useRef<
+    { label: string; targetRole: string; jdText: string; sections: CvSections; coverLetter: string } | null
+  >(null);
   const [exporting, setExporting] = useState(false);
+  const [exportingLetter, setExportingLetter] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[] | null>(null);
   const [tailoring, setTailoring] = useState(false);
+  const [writingLetter, setWritingLetter] = useState(false);
   const [userKey, setUserKey] = useState<{ encrypted: string; iv: string } | null>(null);
   const [userProvider, setUserProvider] = useState<"gemini" | "openrouter">("gemini");
 
@@ -49,11 +54,14 @@ export function CvVersionEditPage() {
         setJdText(loadedVersion.jd_text ?? "");
         const loadedSections = normalizeSections(loadedVersion.sections);
         setSections(loadedSections);
+        const loadedCoverLetter = loadedVersion.cover_letter ?? "";
+        setCoverLetter(loadedCoverLetter);
         lastSavedRef.current = {
           label: loadedVersion.label,
           targetRole: loadedVersion.target_role ?? "",
           jdText: loadedVersion.jd_text ?? "",
           sections: loadedSections,
+          coverLetter: loadedCoverLetter,
         };
       })
       .catch((err) => setError(err instanceof Error ? err.message : "Failed to load version."))
@@ -86,8 +94,9 @@ export function CvVersionEditPage() {
         target_role: targetRole || null,
         jd_text: jdText || null,
         sections,
+        cover_letter: coverLetter || null,
       });
-      lastSavedRef.current = { label, targetRole, jdText, sections };
+      lastSavedRef.current = { label, targetRole, jdText, sections, coverLetter };
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save version.");
     } finally {
@@ -128,6 +137,34 @@ export function CvVersionEditPage() {
     setAiSuggestions(null);
   }
 
+  async function handleWriteCoverLetter() {
+    if (!jdText.trim()) {
+      setError("Add a job description first so the cover letter has something to respond to.");
+      return;
+    }
+    setWritingLetter(true);
+    setError(null);
+    try {
+      const result = await generateCoverLetter({
+        jdText,
+        targetRole,
+        sections,
+        encryptedKey: userKey?.encrypted ?? null,
+        iv: userKey?.iv ?? null,
+        provider: userProvider,
+        sessionToken: session?.access_token ?? "",
+      });
+      setCoverLetter(result.text);
+      if (result.source === "shared" && result.remaining !== undefined) {
+        setError(`Shared quota: ${result.remaining} requests remaining today.`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Cover letter generation failed.");
+    } finally {
+      setWritingLetter(false);
+    }
+  }
+
   async function handleExport() {
     setExporting(true);
     setError(null);
@@ -141,8 +178,22 @@ export function CvVersionEditPage() {
     }
   }
 
-  const isSaved = lastSavedRef.current !== null &&
-    JSON.stringify({ label, targetRole, jdText, sections }) === JSON.stringify(lastSavedRef.current);
+  async function handleExportCoverLetter() {
+    setExportingLetter(true);
+    setError(null);
+    try {
+      const { downloadCoverLetterPdf } = await import("@/features/cv-builder/pdf/downloadCoverLetterPdf");
+      await downloadCoverLetterPdf(`${label || "cover-letter"}-cover-letter`, sections.personal, targetRole, coverLetter);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to export cover letter.");
+    } finally {
+      setExportingLetter(false);
+    }
+  }
+
+  const isSaved =
+    lastSavedRef.current !== null &&
+    JSON.stringify({ label, targetRole, jdText, sections, coverLetter }) === JSON.stringify(lastSavedRef.current);
 
   if (loading) {
     return <LoadingPage />;
@@ -165,6 +216,46 @@ export function CvVersionEditPage() {
                 onClear={() => setAiSuggestions(null)}
               />
             )}
+
+            <section className="mb-10">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-xl">Cover letter</h2>
+                <Button onClick={handleWriteCoverLetter} disabled={writingLetter || !jdText.trim()} size="sm">
+                  {writingLetter ? (
+                    <>
+                      <Sparkles className="mr-1.5 size-3.5 animate-pulse" />
+                      Writing…
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="mr-1.5 size-3.5" />
+                      {coverLetter ? "Regenerate with AI" : "Write with AI"}
+                    </>
+                  )}
+                </Button>
+              </div>
+              <p className="mb-3 text-sm text-muted-foreground">
+                Generated from this version's CV and job description, references real experience only.
+                Edit freely before exporting.
+              </p>
+              <Textarea
+                rows={12}
+                value={coverLetter}
+                onChange={(e) => setCoverLetter(e.target.value)}
+                placeholder="Click “Write with AI”, or write your own here."
+              />
+              {coverLetter && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={handleExportCoverLetter}
+                  disabled={exportingLetter}
+                >
+                  {exportingLetter ? "Exporting…" : "Export cover letter PDF"}
+                </Button>
+              )}
+            </section>
 
             {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
           </div>
