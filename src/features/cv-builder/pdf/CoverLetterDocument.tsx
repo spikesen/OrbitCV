@@ -28,6 +28,7 @@ const styles = StyleSheet.create({
   },
   paragraph: {
     marginBottom: 12,
+    textAlign: "justify",
   },
 });
 

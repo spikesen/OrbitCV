@@ -69,6 +69,9 @@ const styles = StyleSheet.create({
     color: "#3a3a38",
     marginBottom: 3,
   },
+  summaryText: {
+    textAlign: "justify",
+  },
   dateRange: {
     fontSize: 9.5,
     color: "#3a3a38",
@@ -170,7 +173,7 @@ export function CvDocument({ sections, profile }: Props) {
         {sections.summary && (
           <View>
             <Text style={styles.sectionTitle}>Summary</Text>
-            <Text>{sections.summary}</Text>
+            <Text style={styles.summaryText}>{sections.summary}</Text>
           </View>
         )}
 
@@ -264,7 +267,9 @@ export function CvDocument({ sections, profile }: Props) {
                   {entry.name}
                   {entry.link ? ` (${entry.link})` : ""}
                 </Text>
-                {entry.description && <Text style={styles.entrySubtitle}>{entry.description}</Text>}
+                {entry.description && (
+                  <Text style={[styles.entrySubtitle, styles.summaryText]}>{entry.description}</Text>
+                )}
                 {entry.bullets.filter(Boolean).map((bullet, i) => (
                   <View key={i} style={styles.bullet}>
                     <Text style={styles.bulletDot}>•</Text>
